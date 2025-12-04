@@ -9,6 +9,31 @@ sys.path.append('src/analysis')
 from rolling_correlation import load_asset_data, calculate_rolling_correlation, calculate_correlation_statistics, detect_anomalies
 from correlation_matrix import load_multiple_assets, calculate_correlation_matrix
 
+import os
+from pathlib import Path
+
+# Create data directories if they don't exist
+Path("data/raw").mkdir(parents=True, exist_ok=True)
+Path("data/processed").mkdir(parents=True, exist_ok=True)
+
+# Function to collect data on first run
+def ensure_data_exists():
+    """Check if data exists, if not, collect it"""
+    if not os.path.exists('data/raw/SPY_stock.csv'):
+        with st.spinner("📥 Collecting data for the first time... This may take 1-2 minutes"):
+            try:
+                # Import and run data collection
+                sys.path.append('src/data')
+                from collect_all_assets import collect_all_assets
+                collect_all_assets(start_date='2020-01-01')
+                st.success("✅ Data collection complete!")
+            except Exception as e:
+                st.error(f"Error collecting data: {e}")
+                st.stop()
+
+# Run data collection check before anything else
+ensure_data_exists()
+
 # Page configuration
 st.set_page_config(
     page_title="Cross-Asset Correlation Anomaly Detector",
