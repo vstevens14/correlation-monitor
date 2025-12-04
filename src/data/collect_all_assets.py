@@ -3,6 +3,7 @@ from fetch_stock_data import fetch_stock_data
 from fetch_multi_asset_data import fetch_fx_data, fetch_commodity_data, fetch_rates_data, fetch_index_data
 from fetch_economic_data import fetch_fred_data
 import os
+import time
 
 def save_data(data, filepath, asset_name):
     """Save data to CSV with info message"""
@@ -29,6 +30,7 @@ def collect_all_assets(start_date='2020-01-01'):
     for ticker, name in equities.items():
         data = fetch_stock_data(ticker, start_date=start_date)
         save_data(data, f'data/raw/{ticker}_stock.csv', name)
+        time.sleep(1)  # Rate limiting
     
     # FX (FOREIGN EXCHANGE)
     print("\n💱 FOREIGN EXCHANGE:")
@@ -43,6 +45,7 @@ def collect_all_assets(start_date='2020-01-01'):
         try:
             data = fetch_fx_data(ticker, start_date=start_date)
             save_data(data, f'data/raw/{ticker.replace("=", "").replace(".", "_")}_fx.csv', name)
+            time.sleep(1)  # Rate limiting
         except Exception as e:
             print(f"✗ Failed to fetch {name}: {e}")
     
@@ -58,6 +61,7 @@ def collect_all_assets(start_date='2020-01-01'):
         try:
             data = fetch_commodity_data(ticker, start_date=start_date)
             save_data(data, f'data/raw/{ticker.replace("=", "")}_commodity.csv', name)
+            time.sleep(1)  # Rate limiting
         except Exception as e:
             print(f"✗ Failed to fetch {name}: {e}")
     
@@ -73,6 +77,7 @@ def collect_all_assets(start_date='2020-01-01'):
         try:
             data = fetch_rates_data(ticker, start_date=start_date)
             save_data(data, f'data/raw/{ticker.replace("^", "")}_rates.csv', name)
+            time.sleep(1)  # Rate limiting
         except Exception as e:
             print(f"✗ Failed to fetch {name}: {e}")
     
@@ -90,6 +95,7 @@ def collect_all_assets(start_date='2020-01-01'):
             data = fetch_fred_data(series_id, start_date=start_date)
             data.to_csv(f'data/raw/{series_id}_economic.csv')
             print(f"✓ Saved {name}")
+            time.sleep(1)  # Rate limiting
         except Exception as e:
             print(f"✗ Failed to fetch {name}: {e}")
     
