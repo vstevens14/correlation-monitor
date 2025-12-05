@@ -25,7 +25,7 @@ def ensure_data_exists():
                 # Import and run data collection
                 sys.path.append('src/data')
                 from collect_all_assets import collect_all_assets
-                collect_all_assets(start_date='2020-01-01')
+                collect_all_assets(start_date='2020-01-01', num_stocks=100)
                 st.success("✅ Data collection complete!")
             except Exception as e:
                 st.error(f"Error collecting data: {e}")
