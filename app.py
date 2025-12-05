@@ -51,37 +51,57 @@ Detect when relationships break from historical norms to identify potential trad
 # Sidebar - Asset Selection
 st.sidebar.header("Configuration")
 
-# Define available assets
-ASSETS = {
-    'Equities': {
-        'SPY': 'data/raw/SPY_stock.csv',
-        'AAPL': 'data/raw/AAPL_stock.csv',
-        'MSFT': 'data/raw/MSFT_stock.csv',
-        'GOOGL': 'data/raw/GOOGL_stock.csv',
-        'XLF': 'data/raw/XLF_stock.csv'
-    },
-    'Commodities': {
-        'Gold': 'data/raw/GCF_commodity.csv',
-        'Oil': 'data/raw/CLF_commodity.csv',
-        'Copper': 'data/raw/HGF_commodity.csv'
-    },
-    'FX': {
-        'EUR/USD': 'data/raw/EURUSDX_fx.csv',
-        'USD/JPY': 'data/raw/JPYX_fx.csv',
-        'GBP/USD': 'data/raw/GBPUSDX_fx.csv',
-        'USD Index': 'data/raw/DX-Y_NYB_fx.csv'
-    },
-    'Rates': {
-        '10Y Yield': 'data/raw/TNX_rates.csv',
-        '13W Bill': 'data/raw/IRX_rates.csv',
-        'TLT': 'data/raw/TLT_rates.csv'
+# Function to dynamically load all available assets
+def get_available_assets():
+    """Scan data/raw directory and categorize assets"""
+    from pathlib import Path
+    
+    data_dir = Path('data/raw')
+    assets = {
+        'Equities': {},
+        'ETFs': {},
+        'Commodities': {},
+        'FX': {},
+        'Rates': {},
+        'Economic': {}
     }
-}
+    
+    for file in data_dir.glob('*.csv'):
+        filepath = str(file)
+        filename = file.stem
+        
+        # Categorize by suffix
+        if '_stock' in filename:
+            ticker = filename.replace('_stock', '')
+            assets['Equities'][ticker] = filepath
+        elif '_etf' in filename:
+            ticker = filename.replace('_etf', '')
+            assets['ETFs'][ticker] = filepath
+        elif '_commodity' in filename:
+            name = filename.replace('_commodity', '')
+            assets['Commodities'][name] = filepath
+        elif '_fx' in filename:
+            name = filename.replace('_fx', '')
+            assets['FX'][name] = filepath
+        elif '_rates' in filename:
+            name = filename.replace('_rates', '')
+            assets['Rates'][name] = filepath
+        elif '_economic' in filename:
+            name = filename.replace('_economic', '')
+            assets['Economic'][name] = filepath
+    
+    return assets
+
+# Get all available assets
+ASSETS = get_available_assets()
 
 # Flatten assets for selection
 all_assets = {}
-for category, assets in ASSETS.items():
-    all_assets.update(assets)
+for category, assets_dict in ASSETS.items():
+    all_assets.update(assets_dict)
+
+# Sort for better UX
+all_assets = dict(sorted(all_assets.items()))
 
 # Asset pair selection
 st.sidebar.subheader("Select Asset Pair")
