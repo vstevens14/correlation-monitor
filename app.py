@@ -19,8 +19,9 @@ Path("data/processed").mkdir(parents=True, exist_ok=True)
 # Function to collect data on first run
 def ensure_data_exists():
     """Check if data exists, if not, collect it"""
-    if not os.path.exists('data/raw/SPY_stock.csv'):
-        with st.spinner("📥 Collecting data for the first time... This may take 1-2 minutes"):
+    # Check if we have the full dataset (look for a stock that would only exist with 100+ stocks)
+    if not os.path.exists('data/raw/MMM_stock.csv'):  # MMM is the first S&P 500 stock alphabetically
+        with st.spinner("📥 Collecting comprehensive dataset... This may take 5-10 minutes"):
             try:
                 # Import and run data collection
                 sys.path.append('src/data')
@@ -292,6 +293,7 @@ with tab1:
             
             Z-Score: {stats['z_score']:.2f} (threshold: ±{threshold})
             """)
+        
         # ML Prediction Section
         st.markdown("---")
         st.subheader("🤖 ML Correlation Forecast")
@@ -415,6 +417,7 @@ with tab1:
                     except Exception as e:
                         st.error(f"Error generating predictions: {e}")
                         st.info("Make sure you have enough historical data (100+ days)")
+        
     except Exception as e:
         st.error(f"Error loading data: {e}")
 
