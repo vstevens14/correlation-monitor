@@ -3,57 +3,91 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def load_asset_data(filepath):
-    """Load any asset data and return close prices with datetime index"""
-    df = pd.read_csv(filepath)
+def load_asset_data(filepath, return_full=False):
+    """
+    Load asset price data from CSV
     
-    # Handle different date column names
-    date_col = 'Date' if 'Date' in df.columns else df.columns[0]
+    Args:
+        filepath: Path to CSV file
+        return_full: If True, return full DataFrame with volume, etc.
+                    If False, return only close prices (default for backward compatibility)
     
-    # Parse dates and convert to timezone-naive (this handles all timezone variations)
-    df[date_col] = pd.to_datetime(df[date_col], utc=True).dt.tz_localize(None)
-    df = df.set_index(date_col)
+    Returns:
+        Series of close prices or full DataFrame
+    """
+    df = pd.read_csv(filepath, index_col=0, parse_dates=True)
     
-    # Ensure we have a close column
-    if 'close' not in df.columns:
-        raise ValueError(f"No 'close' column found in {filepath}")
+    # Handle timezone - check if it's a DatetimeIndex first
+    if isinstance(df.index, pd.DatetimeIndex) and df.index.tz is not None:
+        df.index = df.index.tz_localize(None)
     
-    return df['close'].dropna()
-
+    # Standardize column names
+    df.columns = df.columns.str.lower()
+    
+    if return_full:
+        return df
+    else:
+        # Return close prices only (backward compatible)
+        if 'close' in df.columns:
+            return df['close']
+        elif 'value' in df.columns:  # For economic data
+            return df['value']
+        else:
+            return df.iloc[:, 0]  # Return first column as fallback
+        
 def calculate_rolling_correlation(asset1_data, asset2_data, window=90):
     """
     Calculate rolling correlation between two assets
-    window: rolling window in days (default 90)
+    
+    Args:
+        asset1_data: Price series for asset 1
+        asset2_data: Price series for asset 2
+        window: Rolling window size in days
+    
+    Returns:
+        Series of rolling correlations
     """
-    # Align the two series by date
-    combined = pd.DataFrame({
+    # Ensure data is aligned
+    df = pd.DataFrame({
         'asset1': asset1_data,
         'asset2': asset2_data
-    }).dropna()
+    })
+    
+    # Remove timezone if present
+    if isinstance(df.index, pd.DatetimeIndex) and df.index.tz is not None:
+        df.index = df.index.tz_localize(None)
+    
+    # Drop NaN values
+    df = df.dropna()
     
     # Calculate rolling correlation
-    rolling_corr = combined['asset1'].rolling(window=window).corr(combined['asset2'])
+    rolling_corr = df['asset1'].rolling(window=window).corr(df['asset2'])
     
     return rolling_corr
 
-def calculate_correlation_statistics(rolling_corr, lookback_period=None):
+def calculate_correlation_statistics(rolling_corr, lookback_period=252):
     """
-    Calculate historical statistics for correlation
-    lookback_period: number of days to look back (None = all history)
+    Calculate statistics for rolling correlation
+    
+    Args:
+        rolling_corr: Series of rolling correlations
+        lookback_period: Period for calculating baseline statistics (days)
+    
+    Returns:
+        Dictionary with correlation statistics
     """
-    if lookback_period:
-        rolling_corr_subset = rolling_corr.iloc[-lookback_period:]
-    else:
-        rolling_corr_subset = rolling_corr
+    # Use the lookback period for baseline
+    baseline = rolling_corr.iloc[-lookback_period:] if len(rolling_corr) > lookback_period else rolling_corr
     
     stats = {
-        'mean': rolling_corr_subset.mean(),
-        'std': rolling_corr_subset.std(),
-        'min': rolling_corr_subset.min(),
-        'max': rolling_corr_subset.max(),
         'current': rolling_corr.iloc[-1],
-        'z_score': (rolling_corr.iloc[-1] - rolling_corr_subset.mean()) / rolling_corr_subset.std()
+        'mean': baseline.mean(),
+        'std': baseline.std(),
+        'min': baseline.min(),
+        'max': baseline.max(),
+        'z_score': (rolling_corr.iloc[-1] - baseline.mean()) / baseline.std() if baseline.std() > 0 else 0
     }
+    
     return stats
 
 def detect_anomalies(rolling_corr, threshold=1.5, lookback_period=None):
