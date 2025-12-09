@@ -116,7 +116,21 @@ asset1_data = load_data(config['asset1_path'])
 asset2_data = load_data(config['asset2_path'])
 
 # Calculate rolling correlation (shared across tabs)
-rolling_corr = calculate_rolling_correlation(asset1_data, asset2_data, window=window)
+try:
+    rolling_corr = calculate_rolling_correlation(asset1_data, asset2_data, window=window)
+    
+    # Debug: Check if data is valid
+    if len(rolling_corr) == 0 or rolling_corr.empty:
+        st.error(f"Correlation calculation returned empty results. Asset 1: {len(asset1_data)} points, Asset 2: {len(asset2_data)} points")
+        st.stop()
+        
+except Exception as e:
+    st.error(f"Error calculating correlation: {e}")
+    st.info(f"Asset 1 ({asset1_name}): {len(asset1_data)} data points")
+    st.info(f"Asset 2 ({asset2_name}): {len(asset2_data)} data points")
+    import traceback
+    st.code(traceback.format_exc())
+    st.stop()
 
 # Create tabs
 tab1, tab2, tab3, tab4 = st.tabs(["Pair Analysis", "Top Anomalies", "Strategy Monitor", "Correlation Matrix"])
