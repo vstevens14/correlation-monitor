@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from rolling_correlation import load_asset_data, calculate_rolling_correlation
 
 def load_multiple_assets(asset_dict):
