@@ -13,25 +13,32 @@ def load_asset_data(filepath, return_full=False):
     Returns:
         Series of close prices or full DataFrame
     """
-    df = pd.read_csv(filepath, index_col=0, parse_dates=True)
-    
-    # Handle timezone - check if it's a DatetimeIndex first
-    if isinstance(df.index, pd.DatetimeIndex) and df.index.tz is not None:
-        df.index = df.index.tz_localize(None)
-    
-    # Standardize column names
-    df.columns = df.columns.str.lower()
-    
-    if return_full:
-        return df
-    else:
-        # Return close prices only (backward compatible)
-        if 'close' in df.columns:
-            return df['close']
-        elif 'value' in df.columns:  # For economic data
-            return df['value']
+    try:
+        df = pd.read_csv(filepath, index_col=0, parse_dates=True)
+        
+        if df.empty:
+            raise ValueError(f"CSV file is empty: {filepath}")
+        
+        # Handle timezone - check if it's a DatetimeIndex first
+        if isinstance(df.index, pd.DatetimeIndex) and df.index.tz is not None:
+            df.index = df.index.tz_localize(None)
+        
+        # Standardize column names
+        df.columns = df.columns.str.lower()
+        
+        if return_full:
+            return df
         else:
-            return df.iloc[:, 0]  # Return first column as fallback
+            # Return close prices only (backward compatible)
+            if 'close' in df.columns:
+                return df['close']
+            elif 'value' in df.columns:  # For economic data
+                return df['value']
+            else:
+                return df.iloc[:, 0]  # Return first column as fallback
+    except Exception as e:
+        print(f"Error loading {filepath}: {e}")
+        return pd.Series(dtype=float)  # Return empty series on error
         
 def calculate_rolling_correlation(asset1_data, asset2_data, window=90):
     """
