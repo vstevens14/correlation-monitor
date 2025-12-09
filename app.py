@@ -1,4 +1,12 @@
 import streamlit as st
+
+# Page configuration
+st.set_page_config(
+    page_title="Cross-Asset Correlation Anomaly Detector",
+    page_icon="📊",
+    layout="wide"
+)
+
 import sys
 import os
 from pathlib import Path
@@ -81,13 +89,6 @@ all_assets = {}
 for category, assets_dict in ASSETS.items():
     all_assets.update(assets_dict)
 all_assets = dict(sorted(all_assets.items()))
-
-# Page configuration
-st.set_page_config(
-    page_title="Cross-Asset Correlation Anomaly Detector",
-    page_icon="📊",
-    layout="wide"
-)
 
 # Apply custom styling
 st.markdown(get_custom_css(), unsafe_allow_html=True)
