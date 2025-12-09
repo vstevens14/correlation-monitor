@@ -127,6 +127,10 @@ def render_sidebar(ASSETS, all_assets):
     
     filtered_assets_2_paths = {k: v for k, v in filtered_assets_2_paths.items() if k != asset1_name}
     
+    # Add data refresh section
+    from data_refresh import render_data_refresh_section
+    render_data_refresh_section()
+
     # Return configuration
     return {
         'asset1_name': asset1_name,
