@@ -30,12 +30,12 @@ Path("data/processed").mkdir(parents=True, exist_ok=True)
 def ensure_data_exists():
     """Check if data exists, if not, collect it"""
     if not os.path.exists('data/raw/MMM_stock.csv'):
-        with st.spinner("Collecting comprehensive dataset... This may take 5-10 minutes"):
+        with st.spinner("📥 Collecting comprehensive dataset... This may take 5-10 minutes"):
             try:
                 sys.path.append('src/data')
                 from collect_all_assets import collect_all_assets
                 collect_all_assets(start_date='2020-01-01', num_stocks=100)
-                st.success("Data collection complete!")
+                st.success("✅ Data collection complete!")
             except Exception as e:
                 st.error(f"Error collecting data: {e}")
                 st.stop()
